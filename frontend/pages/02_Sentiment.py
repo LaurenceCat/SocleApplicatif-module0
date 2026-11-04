@@ -62,13 +62,14 @@ def charger_exemple(cle: str) -> None:
     """Callback : remplit la zone de texte avec un exemple."""
     st.session_state["texte_saisi"] = EXEMPLES[cle]
 
-
+# 2. Optionnel : Proposer des boutons de texte d'exemples (positif, négatif, neutre).
 st.caption("Exemples rapides (VADER est entraine pour l'anglais) :")
 c1, c2, c3 = st.columns(3)
 c1.button("Exemple positif", on_click=charger_exemple, args=("Positif",), use_container_width=True)
 c2.button("Exemple negatif", on_click=charger_exemple, args=("Negatif",), use_container_width=True)
 c3.button("Exemple neutre", on_click=charger_exemple, args=("Neutre",), use_container_width=True)
 
+# 1. Proposer une zone de saisie texte avec st.text_area().
 texte = st.text_area(
     "Retour client a analyser",
     key="texte_saisi",
@@ -76,12 +77,19 @@ texte = st.text_area(
     placeholder="Saisissez ou collez un retour client...",
 )
 
+# 3. Ajouter un bouton d'action avec st.button("Analyser la polarité").
 if st.button("Analyser la polarité", type="primary"):
     if not texte.strip():
         st.warning("Veuillez saisir un texte avant de lancer l'analyse.")
     else:
         try:
             with st.spinner("Analyse en cours..."):
+                #    a. Émettre un POST vers f"{FASTAPI_URL}/predict/sentiment" avec le payload JSON :
+                #       {"texte": texte_saisi}
+                
+                #[Gestion des URLs] Ne codez JAMAIS l'URL 'http://localhost:8000' en dur dans le code de vos pages ! Déclarez une variable d'environnement : FASTAPI_URL = os.getenv('FASTAPI_BACKEND_URL', 'http://localhost:8000'). 
+                # En local, elle pointera vers localhost. Dans Docker, elle pointera vers le conteneur http://backend:8000
+                
                 response = requests.post(
                     f"{FASTAPI_URL}/predict/sentiment",
                     json={"texte": texte},
@@ -90,6 +98,11 @@ if st.button("Analyser la polarité", type="primary"):
                 response.raise_for_status()
                 data = response.json()
 
+            #b. Récupérer la réponse JSON (SentimentPredictResponse) contenant :
+            #       - label (str : 'Positif', 'Neutre', 'Negatif')
+            #       - compound (float entre -1.0 et 1.0)
+            #       - details (dict avec 'pos', 'neu', 'neg')
+            #       - method (str)
             label = data["label"]
             compound = data["compound"]
             scores = data["scores"]
@@ -97,6 +110,7 @@ if st.button("Analyser la polarité", type="primary"):
 
             st.subheader("Resultat")
 
+            #c. Restituer le résultat avec des composants visuels adaptés (st.metric, st.progress, etc.).
             m1, m2, m3 = st.columns(3)
             m1.metric("Polarite", label)
             m2.metric("Score compound", f"{compound:+.3f}")
@@ -133,6 +147,7 @@ if st.button("Analyser la polarité", type="primary"):
                 }
             )
 
+        # Gestion des exceptions
         except requests.exceptions.ConnectionError:
             st.error(f"Impossible de joindre l'API ({FASTAPI_URL}). Verifiez que FastAPI est lance.")
         except requests.exceptions.Timeout:

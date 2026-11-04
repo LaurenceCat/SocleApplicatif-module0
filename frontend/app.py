@@ -129,6 +129,9 @@ if user_prompt:
             reponse_texte = data["response"]
             tool_called = data.get("tool_called", False)
             tool_results = data.get("tool_results", [])
+            
+            ## Ajouter la journalisation
+            #logger.debug(f"Trace DEV résultat reponse_texte {reponse_texte}")
 
             #Afficher la réponse dans le chat assistant et ajouter au session_state.
             st.markdown(reponse_texte)

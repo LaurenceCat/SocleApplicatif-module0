@@ -1,7 +1,9 @@
 """Configuration unifiee de Loguru pour le package iatos_core."""
 
 import sys
+
 from loguru import logger
+
 from iatos_core.config import LOGS_DIR
 
 # Supprimer la configuration par defaut

@@ -49,6 +49,14 @@ pour realiser l'audit d'equite algorithmique (Disparate Impact), l'anonymisation
 #    c. Restituer visuellement le score (ex: st.metric, jauge de progression, couleur de badge).
 # ==============================================================================
 
+
+
+# 1. Créer un formulaire avec st.form("form_credit").
+# 2. Ajouter les champs de saisie :
+#    - montant_demande (st.number_input, ex: 1000 à 50000 €)
+#    - duree_mois (st.slider, ex: 6 à 84 mois)
+#    - revenu_mensuel (st.number_input, ex: 500 à 20000 €)
+#    - bouton de soumission (st.form_submit_button)
 with st.form("form_credit"):
     col1, col2 = st.columns(2)
 
@@ -78,7 +86,9 @@ with st.form("form_credit"):
         )
 
     submitted = st.form_submit_button("Calculer le score", type="primary")
-
+    
+    
+# 3. Lors de la soumission du formulaire
 if submitted:
     payload = {
         "montant_demande": float(montant_demande),
@@ -88,6 +98,8 @@ if submitted:
 
     try:
         with st.spinner("Calcul du score en cours..."):
+            #    a. Émettre un POST vers f"{FASTAPI_URL}/predict/credit" avec le payload JSON :
+            #       {"montant_demande": float, "duree_mois": int, "revenu_mensuel": float}
             response = requests.post(
                 f"{FASTAPI_URL}/predict/credit",
                 json=payload,
@@ -96,19 +108,34 @@ if submitted:
             response.raise_for_status()
             data = response.json()
 
+
+        #    b. Récupérer la réponse JSON (CreditPredictResponse) contenant :
+        #       - score (float entre 300 et 850)
+        #       - decision (str : 'Favorable', 'Ajourne / Examen Approfondi', 'Defavorable')
+        #       - seuil_recommande (float) ??
+        #       - model_version (str) ??
+        ### incohérence entre le commentaire et la réponse réelle de l'API??
         score = data["score"]
         decision = data["decision"]
         motif = data["motif"]
+        features_utilisees = data["features_utilisees"]
         type_modele = data["type_modele"]
 
         st.subheader("Resultat")
 
+
+
+
+        #    c. Restituer visuellement le score (ex: st.metric, jauge de progression, couleur de badge).
         # Score, decision et modele utilise
         m1, m2, m3 = st.columns(3)
         m1.metric("Score de credit", f"{score:.0f}")
         m2.metric("Decision", decision)
         m3.metric("Modele utilise", type_modele)
         st.caption(f"Motif : {motif}")
+        st.markdown("**Features utilisees**")
+        for feature, value in features_utilisees.items():
+            st.write(f"- {feature} : {value}")
 
         # Jauge de progression (score ramene de 300-850 vers 0-1)
         progression = min(max((score - 300) / (850 - 300), 0.0), 1.0)
@@ -122,6 +149,9 @@ if submitted:
         else:
             st.warning(f"Decision : {decision}")
 
+
+
+    # Gestion des exceptions
     except requests.exceptions.ConnectionError:
         st.error(f"Impossible de joindre l'API ({FASTAPI_URL}). Verifiez que FastAPI est lance.")
     except requests.exceptions.Timeout:
@@ -130,5 +160,7 @@ if submitted:
         st.error(f"Erreur renvoyee par l'API : {e}")
     except (KeyError, ValueError) as e:
         st.error(f"Reponse inattendue de l'API : {e}")
+
+
 
 st.info("Ceci est un formulaire et un affichage des predictions de credit IA-TOS")

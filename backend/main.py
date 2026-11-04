@@ -218,7 +218,9 @@ def predict_credit(payload: CreditPredictRequest):
             duree_mois=payload.duree_mois,
             revenu_mensuel=payload.revenu_mensuel,
         )
-
+        
+        logger.debug(f"Trace DEV résultat prédit crédit {result}")
+        
         #3.Construction de la reponse
         return CreditPredictResponse(**result)
 
@@ -261,7 +263,7 @@ def predict_sentiment(payload: SentimentPredictRequest):
         #2. Analyse du texte, appel de la méthode "analyze" définie dans ia_core
         ## par définition la méthode renvoie Dict[str, Any]
         result = sentiment_analyzer.analyze(payload.texte)
-        # afficher le resutlat pour le debug
+        # afficher le resutlat pour le debug, journalisation 
         logger.debug(f"Trace DEV résultat analyseur de sentiments {result}")
 
         #3. Construction de la reponse
