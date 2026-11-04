@@ -4,6 +4,7 @@ Starter Kit Apprenants - Brief 1 IA-TOS.
 """
 
 import os
+
 import requests
 import streamlit as st
 
@@ -97,16 +98,17 @@ if submitted:
 
         score = data["score"]
         decision = data["decision"]
-        seuil = data["seuil_recommande"]
-        model_version = data["model_version"]
+        motif = data["motif"]
+        type_modele = data["type_modele"]
 
         st.subheader("Resultat")
 
-        # Score, ecart au seuil et version du modele
+        # Score, decision et modele utilise
         m1, m2, m3 = st.columns(3)
-        m1.metric("Score de credit", f"{score:.0f}", delta=f"{score - seuil:+.0f} vs seuil")
-        m2.metric("Seuil recommande", f"{seuil:.0f}")
-        m3.metric("Version du modele", model_version)
+        m1.metric("Score de credit", f"{score:.0f}")
+        m2.metric("Decision", decision)
+        m3.metric("Modele utilise", type_modele)
+        st.caption(f"Motif : {motif}")
 
         # Jauge de progression (score ramene de 300-850 vers 0-1)
         progression = min(max((score - 300) / (850 - 300), 0.0), 1.0)
@@ -129,4 +131,4 @@ if submitted:
     except (KeyError, ValueError) as e:
         st.error(f"Reponse inattendue de l'API : {e}")
 
-st.info("A vous de jouer ! Implementez le formulaire et l'affichage des predictions de credit.")
+st.info("Ceci est un formulaire et un affichage des predictions de credit IA-TOS")

@@ -4,6 +4,7 @@ Starter Kit Apprenants - Brief 1 IA-TOS.
 """
 
 import os
+
 import requests
 import streamlit as st
 
@@ -30,7 +31,7 @@ with st.sidebar:
             st.success("API Backend : En ligne")
         else:
             st.warning(f"API Backend : Statut {resp.status_code}")
-    except Exception:
+    except Exception:  # noqa: BLE001
         st.error("API Backend : Hors ligne (Vérifiez le port 8000)")
 
     st.markdown("""
@@ -76,7 +77,9 @@ def afficher_traces_outils(tool_results: list) -> None:
             st.code(str(trace), language="text")
 
 
-# 1. Initialisation de l'historique
+
+
+# 1. Initialiser st.session_state["messages"] s'il n'existe pas encore.
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
@@ -87,24 +90,29 @@ for msg in st.session_state["messages"]:
         if msg.get("tool_called") and msg.get("tool_results"):
             afficher_traces_outils(msg["tool_results"])
 
-# 3. Saisie utilisateur
+# 3. Saisie utilisateur: Récupérer la saisie utilisateur avec st.chat_input()
 user_prompt = st.chat_input("Posez votre question a l'assistant...")
 
+
+### 4. Gérer la saisie utilisateur et l'appel à l'API
 if user_prompt:
-    # Historique envoye a l'API : tous les messages AVANT la question courante
+    # Historique envoye a l'API (= tous les messages qui ont été envoyés)
     history_payload = [
         {"role": m["role"], "content": m["content"]}
         for m in st.session_state["messages"]
     ]
 
-    # 4a. Ajout et affichage du message utilisateur
+    # 4a. Ajouter le message utilisateur dans st.session_state["messages"]
     st.session_state["messages"].append({"role": "user", "content": user_prompt})
+    ## afficher le message
     with st.chat_message("user"):
         st.markdown(user_prompt)
 
-    # 4b-d. Appel API et affichage de la reponse
+    # 4 b/c/d. Appel API et affichage de la reponse
     with st.chat_message("assistant"):
         try:
+            # requête HTTP POST vers f"{FASTAPI_URL}/chat"
+            # avec le payload : {"message": user_prompt, "history": history_payload}
             with st.spinner("L'agent reflechit..."):
                 response = requests.post(
                     f"{FASTAPI_URL}/chat",
@@ -114,15 +122,16 @@ if user_prompt:
                 response.raise_for_status()
                 data = response.json()
 
+            #    c. Récupérer la réponse JSON (ChatResponse) :
+            #       - response (str) : texte de réponse
+            #       - tool_called (bool) : indique si l'outil a été utilisé
+            #       - tool_results (list) : traces des outils
             reponse_texte = data["response"]
             tool_called = data.get("tool_called", False)
             tool_results = data.get("tool_results", [])
 
+            #Afficher la réponse dans le chat assistant et ajouter au session_state.
             st.markdown(reponse_texte)
-
-            # 4e. Traces des outils si l'agent en a utilise
-            if tool_called and tool_results:
-                afficher_traces_outils(tool_results)
 
             st.session_state["messages"].append(
                 {
@@ -132,7 +141,12 @@ if user_prompt:
                     "tool_results": tool_results,
                 }
             )
+            
+            # 4e. Si tool_called est True, afficher un expander montrant les calculs effectués. 
+            if tool_called and tool_results:
+                afficher_traces_outils(tool_results)
 
+        ## Gérer les exceptions
         except requests.exceptions.ConnectionError:
             st.error(f"Impossible de joindre l'API ({FASTAPI_URL}). Verifiez que FastAPI est lance.")
         except requests.exceptions.Timeout:
@@ -142,4 +156,4 @@ if user_prompt:
         except (KeyError, ValueError) as e:
             st.error(f"Reponse inattendue de l'API : {e}")
 
-st.info("A vous de jouer ! Implementez la logique de chat conversationnelle ci-dessous.")
+st.info("Ceci est un chat conversationnelle IA-TOS !")

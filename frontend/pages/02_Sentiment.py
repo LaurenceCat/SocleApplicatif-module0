@@ -4,6 +4,7 @@ Starter Kit Apprenants - Brief 1 IA-TOS.
 """
 
 import os
+
 import requests
 import streamlit as st
 
@@ -91,15 +92,15 @@ if st.button("Analyser la polarité", type="primary"):
 
             label = data["label"]
             compound = data["compound"]
-            details = data["details"]
-            method = data["method"]
+            scores = data["scores"]
+            type_modele = data["type_modele"]
 
             st.subheader("Resultat")
 
             m1, m2, m3 = st.columns(3)
             m1.metric("Polarite", label)
             m2.metric("Score compound", f"{compound:+.3f}")
-            m3.metric("Methode", method)
+            m3.metric("Modele", type_modele)
 
             # Badge colore selon le label
             if label == "Positif":
@@ -118,16 +119,16 @@ if st.button("Analyser la polarité", type="primary"):
             # Repartition pos / neu / neg
             st.markdown("**Repartition des polarites**")
             p1, p2, p3 = st.columns(3)
-            p1.metric("Positif", f"{details.get('pos', 0):.1%}")
-            p2.metric("Neutre", f"{details.get('neu', 0):.1%}")
-            p3.metric("Negatif", f"{details.get('neg', 0):.1%}")
+            p1.metric("Positif", f"{scores.get('pos', 0):.1%}")
+            p2.metric("Neutre", f"{scores.get('neu', 0):.1%}")
+            p3.metric("Negatif", f"{scores.get('neg', 0):.1%}")
 
             st.bar_chart(
                 {
                     "Proportion": {
-                        "Positif": details.get("pos", 0),
-                        "Neutre": details.get("neu", 0),
-                        "Negatif": details.get("neg", 0),
+                        "Positif": scores.get("pos", 0),
+                        "Neutre": scores.get("neu", 0),
+                        "Negatif": scores.get("neg", 0),
                     }
                 }
             )
@@ -142,4 +143,4 @@ if st.button("Analyser la polarité", type="primary"):
             st.error(f"Reponse inattendue de l'API : {e}")
             
 
-st.info("A vous de jouer ! Implementez l'analyseur de sentiment et l'affichage des metriques NLP.")
+st.info("Ceci est un analyseur de sentiment et un affichage des metriques NLP IA-TOS")

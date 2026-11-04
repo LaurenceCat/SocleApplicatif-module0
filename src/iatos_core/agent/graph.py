@@ -1,7 +1,8 @@
 """Construction du graphe d'agent LangGraph avec Tool Calling arithmetique."""
 
-from typing import Any, Dict, List, Optional
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+from typing import Any
+
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_ollama import ChatOllama
 from langgraph.prebuilt import create_react_agent
 
@@ -53,9 +54,9 @@ def get_agent():
 
 def run_agent_message(
     user_message: str,
-    history: Optional[List[Dict[str, str]]] = None,
+    history: list[dict[str, str]] | None = None,
     agent=None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Execute un tour de conversation avec l'agent LangGraph.
     
     Args:
@@ -108,7 +109,7 @@ def run_agent_message(
             "tool_results": tool_results,
         }
 
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         logger.error("Erreur lors de l'appel a l'agent LangGraph : {err}", err=exc)
         return {
             "success": False,
