@@ -120,6 +120,7 @@ def health_check():
  #   tool_called: bool
  #   tool_results: List[str] = Field(default_factory=list)
  
+ # paylaod à renommer? pas très cohérent avec le fonctionnel
 @app.post("/chat", response_model=ChatResponse, tags=["Agent Conversationnel"])
 def chat_endpoint(payload: ChatRequest):
     """Endpoint conversationnel interrogeant l'agent LangGraph outille.
