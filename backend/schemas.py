@@ -55,3 +55,22 @@ class HealthResponse(BaseModel):
     status: str
     version: str
     service: str
+
+
+
+# Schemas pour l'Analyse de Documents
+
+# class DocumentPredictRequest(BaseModel):
+#    texte: str = Field(..., min_length=1, description="Document a analyser")
+# -> inutile dans le cas de l'analyse de document
+
+# Réponse JSON attendue sur l'API (POST /vision/classify-document):    
+class DocumentClassScore(BaseModel):
+    label: str
+    score: float
+
+class DocumentClassificationResponse(BaseModel):
+    filename: str
+    detected_document: str
+    confidence: float
+    candidates: List[DocumentClassScore]

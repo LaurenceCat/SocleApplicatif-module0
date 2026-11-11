@@ -22,6 +22,10 @@ OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.0"))
 CREDIT_MODEL_PATH = MODELS_DIR / "credit_linear_model.joblib"
 DATASET_PATH = DATA_DIR / "credit_risk_dataset.csv"
 
+# Configuration du modèle pour les documents
+CLIP_MODEL_PATH = Path(os.getenv("CLIP_MODEL_PATH", "models/clip-vit-base-patch32"))
+CLIP_DEVICE = os.getenv("CLIP_DEVICE", "cpu")  # "cuda" si GPU
+
 # Configuration API
 API_HOST = os.getenv("API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("API_PORT", "8000"))

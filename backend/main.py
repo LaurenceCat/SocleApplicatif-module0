@@ -7,8 +7,9 @@ Vous devez completer les routes ci-dessous en vous appuyant sur :
 """
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.schemas import (
@@ -16,6 +17,7 @@ from backend.schemas import (
     ChatResponse,
     CreditPredictRequest,
     CreditPredictResponse,
+    DocumentClassificationResponse,
     HealthResponse,
     SentimentPredictRequest,
     SentimentPredictResponse,
@@ -23,12 +25,14 @@ from backend.schemas import (
 from iatos_core import __version__
 from iatos_core.agent.graph import run_agent_message
 from iatos_core.logger import logger
+from iatos_core.ml.document import DocumentAnalyzer
 from iatos_core.ml.scoring import CreditScoringPredictor
 from iatos_core.ml.sentiment import SentimentAnalyzer
 
 # Services partages (Singletons en memoire)
 scoring_predictor: CreditScoringPredictor = None
 sentiment_analyzer: SentimentAnalyzer = None
+document_analyzer: DocumentAnalyzer = None
 
 
 
@@ -43,7 +47,7 @@ async def lifespan(app: FastAPI):
     3. Logger le succes de l'initialisation avec loguru.
     """
     
-    global scoring_predictor, sentiment_analyzer
+    global scoring_predictor, sentiment_analyzer, document_analyzer
     logger.info("Demarrage des services FastAPI IA-TOS...")
     
     #1.
@@ -51,9 +55,12 @@ async def lifespan(app: FastAPI):
     
     #2.
     sentiment_analyzer = SentimentAnalyzer()
-    
+
     #3.
-    logger.success("Modeles initialises avec succes: CreditScoringPredictor et SentimentAnalyzer.")
+    document_analyzer = DocumentAnalyzer()
+
+    #4.
+    logger.success("Modeles initialises avec succes: CreditScoringPredictor, SentimentAnalyzer et DocumentAnalyzer.")
     
     yield
     logger.info("Arret des services FastAPI IA-TOS.")
@@ -293,3 +300,79 @@ def predict_sentiment(payload: SentimentPredictRequest):
     #    status_code=501, 
     #   detail="Endpoint /predict/sentiment non implemente. A vous de jouer !"
     #)
+
+
+
+##################################################################################################################
+### TP3 Sujet 4 : Contrôle & Tri Automatique de Pièces Justificatives (Vision CLIP)
+##################################################################################################################
+
+## Catégories de documents pour l'analyse CLIP
+DOCUMENT_LABELS = [
+    "la photo d'un passeport",
+    "la photo d'un relevé de compte",
+    "la photo d'un chèque bancaire",
+    "la photo d'une page blanche",
+    "la photo de quelque chose d'autre",
+]
+
+## Implémentation du endpoint pour l'analyse de documents 
+# DocumentPredictRequest reçoit un fichier selon le schéma
+@app.post("/vision/classify-document", response_model=DocumentClassificationResponse, tags=["Vision CLIP"])
+def classify_document(file: UploadFile = File(..., description="Image du document à analyser")):  # noqa: B008
+    """Endpoint de contrôle & Tri Automatique de Pièces Justificatives (Vision CLIP).
+    
+    labels = DOCUMENT_LABELS
+    
+    Fait :
+    1. Recuperer l'instance globale de document_analyzer (ou l'instancier si None).
+    2. Appeler document_analyzer.classify(file.file.read(), labels).
+    3. Retourner une instance de DocumentClassificationResponse avec les resultats.
+    4. Gerer les exceptions potentielles avec un HTTPException(500).
+    """
+    
+    
+    global document_analyzer
+    try:
+        #1. Recuperer l'instance globale
+        if document_analyzer is None:
+            document_analyzer = DocumentAnalyzer()
+
+        #2. Analyse du document, appel de la méthode "classify" définie dans ia_core
+        ## par définition la méthode renvoie Dict[str, Any]
+        results = document_analyzer.classify(file.file.read(), DOCUMENT_LABELS)
+        # afficher le resutlat pour le debug, journalisation 
+        logger.debug(f"Trace DEV résultat analyseur de documents {results}")
+
+        #3. Construction de la reponse
+        ## NB: ** déplie le dictionnaire en arguments nommés
+        ## **result = 
+        # Réponse JSON attendue sur l'API (POST /vision/classify-document - Code HTTP 200) :
+        # {
+        #   "filename": "specimen_rib.jpg",
+        #   "detected_document": "bank statement",
+        #   "confidence": 0.784,
+        #   "candidates": [
+        #     {"label": "bank statement", "score": 0.784},
+        #     {"label": "identity card", "score": 0.121},
+        #     {"label": "bank check", "score": 0.082},
+        #     {"label": "blank paper", "score": 0.013}
+        #   ]
+        # }
+        #return DocumentClassificationResponse(**result)
+    
+        return DocumentClassificationResponse(
+            filename=file.filename,
+            detected_document=results[0]["label"],
+            confidence=results[0]["score"],
+            candidates=results,
+        )
+
+    #Gérer les exceptions si une requête ne respecte pas le format
+    except Exception as e:  # noqa: BLE001
+        #4. Log + erreur HTTP 500
+        logger.error(f"Erreur dans /vision/classify-document : {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur interne lors de l'analyse de documents clip.",
+        )

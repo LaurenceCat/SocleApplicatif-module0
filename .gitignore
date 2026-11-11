@@ -45,3 +45,4 @@ logs/
 *.swo
 .DS_Store
 Thumbs.db
+models/clip-vit-base-patch32/pytorch_model.bin
