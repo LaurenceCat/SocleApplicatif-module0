@@ -311,7 +311,7 @@ def predict_sentiment(payload: SentimentPredictRequest):
 DOCUMENT_LABELS = [
     "la photo d'un passeport",
     "la photo d'un relevé de compte",
-    "la photo d'un chèque bancaire",
+    "la photo d'un chèque",
     "la photo d'une page blanche",
     "la photo de quelque chose d'autre",
 ]
