@@ -1,0 +1,14 @@
+** Lancement du backend
+Ouverture powershell
+cd \Workspace\Simplon\SocleApplicatif-module0\
+uv run uvicorn backend.main:app --reload --port 8000    
+
+** Lancement du frontend
+Ouverture powershell
+cd \Workspace\Simplon\SocleApplicatif-module0\frontend\
+uv run streamlit run app.py
+
+** Lancement des TU
+Ouverture powershell
+cd \Workspace\Simplon\SocleApplicatif-module0\
+uv run pytest

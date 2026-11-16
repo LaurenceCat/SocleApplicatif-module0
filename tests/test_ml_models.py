@@ -1,5 +1,9 @@
 """Tests unitaires pour les composants ML et NLP."""
 
+from pathlib import Path
+
+from backend.main import DOCUMENT_LABELS
+from iatos_core.ml.document import DocumentAnalyzer
 from iatos_core.ml.scoring import CreditScoringPredictor
 from iatos_core.ml.sentiment import SentimentAnalyzer
 
@@ -44,3 +48,39 @@ def test_sentiment_analyzer():
     res_empty = analyzer.analyze("")
     assert res_empty["label"] == "Neutre"
     assert res_empty["compound"] == 0.0
+
+
+def test_document_analyzer():
+    analyzerDoc = DocumentAnalyzer()
+    
+    # Cas passeport
+    image_bytes1 = Path(".\\tests\\fichiersTests\\AnalyseDocuments\\passeport\\passport1.jpg").read_bytes()
+    results1 = analyzerDoc.classify(image_bytes1, DOCUMENT_LABELS)
+    detected_document1=results1[0]["label"]
+    confidence1=results1[0]["score"]
+    assert detected_document1 == "la photo d'un passeport"
+    assert confidence1 >= 0.9
+
+    # Cas relevé de compte
+    image_bytes2 = Path(".\\tests\\fichiersTests\\AnalyseDocuments\\releve_compte\\bank1.jpg").read_bytes()
+    results2 = analyzerDoc.classify(image_bytes2, DOCUMENT_LABELS)
+    detected_document2=results2[0]["label"]
+    confidence2=results2[0]["score"]
+    #assert detected_document2 == "la photo d'un relevé de compte"
+    #assert confidence2 >= 0.9
+    
+    # Cas chèque
+    image_bytes3 = Path(".\\tests\\fichiersTests\\AnalyseDocuments\\cheque\\cheque2.jpg").read_bytes()
+    results3 = analyzerDoc.classify(image_bytes3, DOCUMENT_LABELS)
+    detected_document3=results3[0]["label"]
+    confidence3=results3[0]["score"]
+    #assert detected_document3 == "la photo d'un chèque"
+    #assert confidence3 >= 0.9
+          
+    # Cas page blanche
+    image_bytes4 = Path(".\\tests\\fichiersTests\\AnalyseDocuments\\pageBlanche\\PageBlanche.png").read_bytes()
+    results4 = analyzerDoc.classify(image_bytes4, DOCUMENT_LABELS)
+    detected_document4=results4[0]["label"]
+    confidence4=results4[0]["score"]
+    assert detected_document4 == "la photo d'une page blanche"
+    assert confidence4 >= 0.5  

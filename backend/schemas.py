@@ -64,10 +64,23 @@ class HealthResponse(BaseModel):
 #    texte: str = Field(..., min_length=1, description="Document a analyser")
 # -> inutile dans le cas de l'analyse de document
 
+
+
 # Réponse JSON attendue sur l'API (POST /vision/classify-document):    
+# DocumentClassScore
+# label (str): Libellé candidat évalué par le modèle multimodal.
+# score (float): Probabilité d'adéquation comprise entre 0.0 et 1.0.
+
 class DocumentClassScore(BaseModel):
     label: str
     score: float
+
+
+# DocumentClassificationResponse
+# filename (str): Nom du fichier image téléversé.
+# detected_document (str): Libellé ayant obtenu la probabilité maximale.
+# confidence (float): Indice de certitude de la détection (entre 0.0 et 1.0).
+# candidates (list[DocumentClassScore]): Distribution complète des scores pour l'ensemble des libellés.
 
 class DocumentClassificationResponse(BaseModel):
     filename: str

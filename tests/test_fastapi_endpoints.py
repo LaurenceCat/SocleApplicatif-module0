@@ -65,3 +65,13 @@ def test_endpoint_chat_with_mocked_agent(client):
         assert data["success"] is True
         assert data["tool_called"] is True
         assert "20" in data["response"]
+
+
+def test_endpoint_classify_document_success(client):
+    with open(".\\tests\\fichiersTests\\AnalyseDocuments\\pageBlanche\\PageBlanche.png", "rb") as f:
+        response = client.post("/vision/classify-document", files={"file": ("PageBlanche.png", f, "image/png")})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["detected_document"] == "la photo d'une page blanche"
+    assert data["confidence"] >= 0.5
+    
