@@ -30,6 +30,7 @@ dependencies = [
     "pillow>=13.0.0",
     "python-multipart>=0.0.32",
     "huggingface-hub>=2.4.0",
+    "matplotlib>=3.11.2",
 ]
 
 [project.optional-dependencies]
@@ -44,3 +45,8 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = [".", "src"]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+]
